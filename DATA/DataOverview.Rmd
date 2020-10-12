@@ -1,0 +1,135 @@
+---
+title: "Data Overview"
+author: "Helen Moor"
+date: "9 October 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("rmarkdown")
+library("knitr")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Overview of data for article Moor H, Nordén J, Penttilä J, Siitonen J, Snäll T. (2020) Long-term effects of colonization-extinction dynamics of generalist versus specialist wood-decaying fungi. *Journal of Ecology.*
+
+
+Input data for modelling is located in folder INPUT_DATA/. Covariate data for scenario simulation is located in folder SCENARIO_DATA/. These datasets are edited, suitably formatted for modelling and simulations, and stored in Rdata format.
+
+Comma-separated files with all data are located in CSV/ (these require formatting for modelling).
+
+
+## Input data for modelling
+
+
+There are two input datasets for fitting models: 
+
+* __ModelInputData_minDiam5.RData__  contains all data including dead wood to a minimum diameter of 5cm. This data should be used for modelling the following three species: "gloesepi", "phelviti", "tricabie".
+* __ModelInputData_minDiam10.RData__  contains all data including dead wood to a minimum diameter of 10cm. This data should be used for modelling all other species.
+
+Both datasets contain identically named objects, as well as a specifier of which minimum diameter is assumed (minDiam). The contents of each dataset is explained in the following using __ModelInputData_minDiam5.RData__ as example.
+
+
+
+```{r load.data}
+load(file = "./INPUT_DATA/ModelInputData_minDiam5.RData")
+ls() # this dataset contains 15 objects
+```
+
+Each model input dataset contains datasets for __mature__ stands (stand age >= 64 yr) and for recently __clear-cut__ stands (stand age <=20 yr). The main colonisation-extinction models are fitted using mature stand data. Auxiliary colonisation-extinction models for use in projections are fitted for recently clear-cut models for the species: tricabie, fomipini, gloesepi, antrseri, phelviti.
+
+### Species occurrence data
+
+* __fungi.species__: is a character vector with the acronyms of the 10 fungi species modelled
+* __Ydat.mature__: contains presence-absence data at two survey timepoints for all species in mature stands
+* __Ydat.clearcuts__: contains presence-absence data at two survey timepoints for all species in recently clear-cut stands
+
+```{r ydat}
+fungi.species
+
+str(Ydat.mature) # Ydat is an array of 3 dimensions (stands, species, timepoint)
+#dimnames(Ydat.mature) # dimnames holds (StandIDs, species acronyms, timepoint "T1" or "T2")
+
+```
+### Covariate/ explanatory data
+
+* __minDiam__: specifies the minimum diameter of downed spruce dead wood included (5 or 10 cm)
+* __Xdat.mature.raw__: contains raw covariate data for mature stands, inlcuding plot, stand and landscape level covariates
+* __Xdat.clearcuts.raw__: contains raw covariate data for recently clear-cut stands, inlcuding plot, stand and landscape level covariates
+
+These raw datasets are not used for modelling but are included for reference.
+
+```{r xdat.raw}
+str(Xdat.mature.raw) 
+```
+
+Covariate data used for modelling has already been prepared from the raw data, i.e. relevant covariates have been log-transformed (for colonisation submodel: log-transform all covariates; for extinction submodel: log-transform the highly skewed dead wood volume and landscape-scale connectivity metrics) and subsequently standardised (centered and scaled to mean zero and variance 1). Because of the different transformation treatment, these datasets are stored separately as:
+
+* __Xdat.mature.standardised.Pcol__
+* __Xdat.mature.standardised.Pext__
+
+and
+
+* __Xdat.clearcuts.standardised.Pcol__
+* __Xdat.clearcuts.standardised.Pext__
+
+The list __COVinfo__ contains the means and standard deviations used for standardisation (see SI table S4).  __COVinfo__  is also stored separately on its own in files __COVinfo_minDiamXX.RData__ (where XX= 5 or XX= 10 for minimum Diameter), for easy access when processing scenario data.
+
+The covariate "LocalConnectivity", i.e. the presence of a living fruit body during the first survey in the remainder of the stand or the surroundings, is stored for all species in a separate array named __Xdat.mature.LocalConnectivity__. The row names hold the StandIDs and the column names the species acronym.
+
+```{r xdat.localconn}
+str(Xdat.mature.LocalConnectivity) 
+```
+
+### Data for detection model
+
+To estimate detection probability, intensive repeat surveys were conducted. The dataframe __detdat__ contains the detection histories (where 1 corresponds to a detection history of "01", i.e. the presence was missed during the first, standard survey; and 11 corresponds to a detection history of "11", i.e. the presence was detected during both surveys), as well as the variable "Detected", which is used for modelling.
+
+For three species with >10 species-specific datapoints (antrseri, fomipini, tricabie), this data is to be subset to the modelled species only. For all other species, detection/non-detection data is pooled across all species in this dataset. 
+
+```{r detdat}
+str(detdat) 
+```
+
+
+### Offsets for area and time interval between surveys
+
+To estimate colonization and extinction probabilities standardised to the average plot area (0.2 ha) and a typical time interval (10 yr), offsets are applied during modelling. Variables contained in array __offsets__ are:
+
+* "YearsBetwSurveys": the time interval between surveys for this stand divided by the typical time interval (10 yr); n(i) in SI section Model structure
+* "CellArea_ha" : the area of the plot for this stand divided by the average plot area (0.2 ha); a(i) in SI section Model structure
+* "cOffset":  offset applied to colonization probability, n(i) * a(i) 
+* "eOffset":  offset applied to extinction probability, n(i) / a(i)
+
+
+```{r offsets}
+str(offsets.mature) 
+```
+
+```{r cleanup}
+rm(list=ls())
+```
+
+
+## Covariate data for scenario simulation
+
+Covariate data for the development of 200 stands was created using the PlanWise application of Heureka, see SI section Scenario of future forest development.
+
+
+```{r load.scendata}
+load(file = "./SCENARIO_DATA/CovDat_ExampleStands.RData")
+ls() # this dataset contains 2 objects
+
+str(covdat)
+dimnames(covdat)[[2]]
+
+```
+
+* __covdat__: is a 3D array that holds covariate data for 200 stands and 11 time periods. Note that time periods are labelled "0", "2", "4", etc. because Heureka simulates stand development for 5 year time steps, which here are thinned to 10 year time steps. The array is prepared as a design matrix for use in projections and therefore contains a column "(Intercept)" containing only 1s. Dead wood volume occurs twice: once for each minium diameter; the relevant column is chosen during projections depending on the target species and the other column discarded.
+
+```{r standdat}
+str(standdat)
+```
+
+* __standdat__: is a dataframe with some extra information on the modelled stands. Relevant here is mainly column SetAside, which indicates whether the stand is a managed production forest or an unmanaged setaside.
+

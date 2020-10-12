@@ -1,0 +1,24 @@
+model
+{
+    for (i in 1:ncells) {
+        Z[i] ~ dbern(psi[i])
+        psi[i] <- 1 - pow((1 - op[i]), offsets[i, 2])
+        cloglog(op[i]) <- inprod(betan[], X[i, ])
+    }
+    for (i in 1:ncells) {
+        Y[i] ~ dbern(p.eff[i])
+        p.eff[i] <- Z[i] * pdet
+        Y.new[i] ~ dbern(p.eff[i])
+    }
+    for (i in 1:ndet) { 
+		det[i] ~ dbern(detmu[i])
+		logit(detmu[i]) <- detpar    
+	}
+    n.occ <- sum(Y.new[1:ncells])
+    pdet <- exp(detpar) / (1 + exp(detpar))# invlogit()
+    # priors:
+    for (j in 1:KEnvCol) {
+        betan[j] ~ dnorm(0, 0.01)
+    }
+    detpar ~ dnorm(0, 1)
+}

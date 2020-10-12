@@ -1,0 +1,42 @@
+model
+{
+    cloglog(lomega) <- omega
+    for (i in 1:ncells) {
+        Z[i, 1] ~ dbern(lomega)
+        Z[i, 2] ~ dbern(psi[i])
+        psi[i] <- (1 - Z[i, 1]) * cps[i] + Z[i, 1] * (1 - eps[i])
+        cps[i] <- 1 - pow((1 - cp[i]), offsets[i, 3])
+        eps[i] <- 1 - pow((1 - ep[i]), offsets[i, 4])
+        cloglog(cp[i]) <- inprod(beta[], XEnvCol[i, ]) + betaCell6 * PresCell6[i]
+        logit(ep[i]) <- gamma
+    }
+    for (i in 1:ncells) {
+        for (k in 1:2) {
+            Y[i, k] ~ dbern(p.eff[i, k])
+            p.eff[i, k] <- Z[i, k] * pdet
+            Y.new[i, k] ~ dbern(p.eff[i, k])
+        }
+    }
+    for (i in 1:ncells) {                                            
+    	PresCell6[i] ~ dbern(muCell6[i])
+    	logit(muCell6[i]) <- delta
+    	}
+    for (i in 1:ndet) { 
+		det[i] ~ dbern(detmu[i])
+		logit(detmu[i]) <- detpar    
+		}
+    pdet <- exp(detpar) / (1 + exp(detpar))# invlogit()
+    n.occT1 <- sum(Y.new[1:ncells, 1])
+    n.occT2 <- sum(Y.new[1:ncells, 2])
+    temp <- Y.new[1:ncells, 1] - Y.new[1:ncells, 2]
+    n.ext <- sum(temp[1:ncells] == 1)
+    n.col <- sum(temp[1:ncells] == -1)
+    omega ~ dnorm(0,1)  
+    gamma  ~ dnorm(0,1)
+    betaCell6 ~ dnorm(0,0.01)
+    for (i in 1:KEnvCol) {
+        beta[i] ~ dnorm(0,0.01) 
+    }
+    delta ~ dnorm(0,1) 
+    detpar ~ dnorm(0,1) 
+}
