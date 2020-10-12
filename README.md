@@ -10,3 +10,7 @@ Data and code for Moor et al. (2020) Long-term effects of colonization-extinctio
 ## Code
 Scripts were created usign R version 3.5.0. Packrat is used to log package versions.
 To fit models, JAGS v 4.3.0 needs to be installed, freely available [here](https://sourceforge.net/projects/mcmc-jags/).
+
+
+[![DOI](https://zenodo.org/badge/302627466.svg)](https://zenodo.org/badge/latestdoi/302627466)
+
