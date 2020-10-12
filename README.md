@@ -1,5 +1,5 @@
 # WoodFungiDynamics
-Data and code for Moor et al. (2020) Long-term effects of colonization-extinction dynamics of generalist versus specialist wood-decaying fungi, J Ecol.
+Data and code for Moor, Nordén, Penttilä, Siitonen & Snäll (2020) Long-term effects of colonization-extinction dynamics of generalist versus specialist wood-decaying fungi, J Ecol.
 
 ## Abstract
 1. Long-term metapopulation persistence is mediated by the dynamics of colonization and extinction. To understand and predict future species occupancy in changing landscapes, we must account for the dynamic rates that shape the occupancy and disentangle their dependence on environmental conditions. Specialist and generalist species may differ in their dynamics in systematic ways.
